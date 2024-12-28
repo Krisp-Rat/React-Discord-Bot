@@ -25,9 +25,9 @@ async def join(ctx):
         channel = ctx.author.voice.channel
         # Connect to the channel
         await channel.connect()
-        await ctx.send(f"Joined {channel.name}!")
     else:
         await ctx.send("You need to be in a voice channel for me to join!")
+    await ctx.message.delete()
 
 @bot.command()
 async def leave(ctx):
@@ -35,9 +35,9 @@ async def leave(ctx):
     # Check if the bot is in a voice channel
     if ctx.voice_client:
         await ctx.voice_client.disconnect()
-        await ctx.send("Disconnected from the voice channel!")
     else:
         await ctx.send("I'm not in a voice channel!")
+    await ctx.message.delete()
 
 @bot.command()
 async def react(ctx):
@@ -62,11 +62,16 @@ async def react(ctx):
     except Exception as e:
         await ctx.send(f"An error occurred: {e}")
 
+    await ctx.message.delete()
+
+reacted_messages = []
 @bot.event
 async def on_reaction_add(reaction, user):
     # Check for thumbs up reaction
-    if "react" == reaction.emoji.name:
+    print(reaction.message.id)
+    if "react" == reaction.emoji.name and reaction.message.id not in reacted_messages:
         reacted = react_text()
+        reacted_messages.append(reaction.message.id)
         await reaction.message.reply(reacted)
 
 
