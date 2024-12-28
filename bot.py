@@ -1,15 +1,20 @@
 import discord
 from reaction import *
-import ffmpeg
+#import ffmpeg
 from discord.ext import commands
-BOT_TOKEN = 'MTMyMjMxMDY4OTI3NjAzNTA5Mg.G4Ed-y.cZ5kiofk2hYgg-Ic8m_3xTPEA7Cj5AFwQO7SZw'
-CHANNEL_ID =  507666860968247298
+import imageio_ffmpeg as ffmpeg
+
+FFMPEG_PATH = ffmpeg.get_ffmpeg_exe()
+
+secret = 'MTMyMjMxMDY4OTI3NjAzNTA5Mg.G4Ed-y.cZ5kiofk2hYgg-Ic8m_3xTPEA7Cj5AFwQO7SZw'
+BOT_TOKEN = os.environ.get('BOT_TOKEN', secret)
 
 intents = discord.Intents.default()
 intents.message_content = True
 
 #client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
+
 
 
 
@@ -52,8 +57,9 @@ async def react(ctx):
 
         # Prepare the audio source using FFmpeg
         sound_url = grab_reaction()
-        direct_path = 'C:/ffmpeg/ffmpeg-2024-12-26-git-fe04b93afa-essentials_build/bin/ffmpeg'
-        audio_source = discord.FFmpegPCMAudio(executable=direct_path , source= "Reactions/GrabBag/" + sound_url)
+        direct_path = ffmpeg
+        #discord.AudioSource
+        audio_source = discord.FFmpegPCMAudio(executable= FFMPEG_PATH , source= "Reactions/GrabBag/" + sound_url)
         if not vc.is_playing():
             vc.play(audio_source, after=lambda e: print(f"Error: {e}") if e else None)
             #await ctx.send(f"Now playing: {sound_url}")

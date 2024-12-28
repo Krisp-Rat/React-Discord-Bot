@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  bot:
+    build: .
+    environment:
+      BOT_TOKEN : 'MTMyMjMxMDY4OTI3NjAzNTA5Mg.G4Ed-y.cZ5kiofk2hYgg-Ic8m_3xTPEA7Cj5AFwQO7SZw'
