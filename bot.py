@@ -1,6 +1,6 @@
 import discord
+import os
 from reaction import *
-#import ffmpeg
 from discord.ext import commands
 import imageio_ffmpeg as ffmpeg
 
@@ -12,10 +12,7 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN', secret)
 intents = discord.Intents.default()
 intents.message_content = True
 
-#client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix="!", intents=intents)
-
-
 
 
 @bot.event
@@ -57,7 +54,6 @@ async def react(ctx):
 
         # Prepare the audio source using FFmpeg
         sound_url = grab_reaction()
-        direct_path = ffmpeg
         #discord.AudioSource
         audio_source = discord.FFmpegPCMAudio(executable= FFMPEG_PATH , source= "Reactions/GrabBag/" + sound_url)
         if not vc.is_playing():
@@ -79,6 +75,39 @@ async def on_reaction_add(reaction, user):
         reacted = react_text()
         reacted_messages.append(reaction.message.id)
         await reaction.message.reply(reacted)
+
+@bot.command()
+async def create_react(ctx):
+    await ctx.message.delete()
+    emoji = ctx.guild.emojis # 'react' is the name of the custom emoji
+    for i in emoji:
+        if i.name == "react":
+            await i.delete()
+    # Create the emoji
+    try:
+        file_path = "Reactions/reactbot_profile.png"
+        with open(file_path, "rb") as img:
+            emoji = await ctx.guild.create_custom_emoji(name="react", image=img.read())
+            reacted = react_text()
+            await ctx.send(f'# Reaction emoji has been created!\n ' + f'# "'+ f'{reacted}' +f'" - {emoji}')
+
+    except discord.HTTPException as e:
+        await ctx.send(f"Failed to create emoji: {e}")
+
+@bot.event
+async def on_message(message):
+    # Ignore the bot's own messages
+    if message.author == bot.user:
+        return
+
+    # Define the phrase you want to detect
+    target_phrase = "overwatch futa"
+
+    # Check if the target phrase is in the message content (case-insensitive)
+    if target_phrase.lower() in message.content.lower():
+        await message.reply("+ 10 Sean Bucks")
+    else:
+        await bot.process_commands(message)
 
 
 bot.run(BOT_TOKEN)
