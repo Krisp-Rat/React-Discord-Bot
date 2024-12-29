@@ -1,51 +1,51 @@
 import discord
 import os
 from reaction import *
-from discord.ext import commands
 import imageio_ffmpeg as ffmpeg
+import dotenv
+
 
 FFMPEG_PATH = ffmpeg.get_ffmpeg_exe()
 
-secret = 'MTMyMjMxMDY4OTI3NjAzNTA5Mg.G4Ed-y.cZ5kiofk2hYgg-Ic8m_3xTPEA7Cj5AFwQO7SZw'
-BOT_TOKEN = os.environ.get('BOT_TOKEN', secret)
+dotenv.load_dotenv()
+BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
 
 intents = discord.Intents.default()
-intents.message_content = True
-
-bot = commands.Bot(command_prefix="!", intents=intents)
-
+bot = discord.Bot(intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"We have logged in as {bot.user}")
+    print(f"{bot.user} is ready and online!")
 
-@bot.command()
-async def join(ctx):
-    """Command to join a voice channel"""
+@bot.slash_command(name="saysomething", description="Say hello to the bot")
+async def hello(ctx: discord.ApplicationContext):
+    await ctx.respond("Hey!")
+
+
+@bot.slash_command(name="join", description="Join a voice channel")
+async def join(ctx: discord.ApplicationContext):
     # Check if the user is in a voice channel
     if ctx.author.voice:
         channel = ctx.author.voice.channel
         # Connect to the channel
         await channel.connect()
+        await ctx.respond("Connected to your voice channel!", ephemeral=True)
     else:
-        await ctx.send("You need to be in a voice channel for me to join!")
-    await ctx.message.delete()
+        await ctx.respond("You need to be in a voice channel for me to join!", ephemeral=True)
 
-@bot.command()
+@bot.slash_command(name="leave", description="Leave the voice channel")
 async def leave(ctx):
-    """Command to leave a voice channel"""
     # Check if the bot is in a voice channel
     if ctx.voice_client:
         await ctx.voice_client.disconnect()
+        await ctx.respond("Disconnected from the voice channel.", ephemeral=True)
     else:
-        await ctx.send("I'm not in a voice channel!")
-    await ctx.message.delete()
+        await ctx.respond("I'm not in a voice channel!", ephemeral=True)
 
-@bot.command()
+@bot.slash_command(name="react", description="Play a reaction sound in the voice channel")
 async def react(ctx):
-    """Command to play a sound in the voice channel"""
     if not ctx.voice_client:
-        await ctx.send("I'm not connected to a voice channel! Use !join to connect me.")
+        await ctx.respond("I'm not connected to a voice channel! Use /join to connect me.", ephemeral=True)
         return
 
     try:
@@ -54,60 +54,62 @@ async def react(ctx):
 
         # Prepare the audio source using FFmpeg
         sound_url = grab_reaction()
-        #discord.AudioSource
-        audio_source = discord.FFmpegPCMAudio(executable= FFMPEG_PATH , source= "Reactions/GrabBag/" + sound_url)
+        audio_source = discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=f"Reactions/GrabBag/{sound_url}")
+
         if not vc.is_playing():
             vc.play(audio_source, after=lambda e: print(f"Error: {e}") if e else None)
-            #await ctx.send(f"Now playing: {sound_url}")
+            await ctx.respond("I love you", ephemeral=True)
         else:
-            await ctx.send("Already playing audio. Please wait until it's finished.")
+            await ctx.respond("Already playing audio. Please wait until it's finished.", ephemeral=True)
     except Exception as e:
-        await ctx.send(f"An error occurred: {e}")
+        await ctx.respond(f"An error occurred: {e}", ephemeral=True)
 
-    await ctx.message.delete()
-
-reacted_messages = []
-@bot.event
-async def on_reaction_add(reaction, user):
-    # Check for thumbs up reaction
-    print(reaction.message.id)
-    if "react" == reaction.emoji.name and reaction.message.id not in reacted_messages:
-        reacted = react_text()
-        reacted_messages.append(reaction.message.id)
-        await reaction.message.reply(reacted)
-
-@bot.command()
+@bot.slash_command(name="create_react", description="Create a custom reaction emoji")
 async def create_react(ctx):
-    await ctx.message.delete()
-    emoji = ctx.guild.emojis # 'react' is the name of the custom emoji
-    for i in emoji:
-        if i.name == "react":
-            await i.delete()
+    emoji = ctx.guild.emojis
+    for e in emoji:
+        if e.name == "react":
+            await e.delete()
+
     # Create the emoji
     try:
         file_path = "Reactions/reactbot_profile.png"
         with open(file_path, "rb") as img:
             emoji = await ctx.guild.create_custom_emoji(name="react", image=img.read())
             reacted = react_text()
-            await ctx.send(f'# Reaction emoji has been created!\n ' + f'# "'+ f'{reacted}' +f'" - {emoji}')
-
+            await ctx.respond(f'# Reaction emoji has been created!\n ' + f'# "'+ f'{reacted}' +f'" - {emoji}')
     except discord.HTTPException as e:
-        await ctx.send(f"Failed to create emoji: {e}")
+        await ctx.respond(f"Failed to create emoji: {e}")
 
+reacted_messages = []
 @bot.event
-async def on_message(message):
-    # Ignore the bot's own messages
-    if message.author == bot.user:
-        return
+async def on_reaction_add(reaction, user):
+    # Check for thumbs up reaction
+    if "react" == reaction.emoji.name and reaction.message.id not in reacted_messages:
+        reacted = react_text()
+        reacted_messages.append(reaction.message.id)
+        await reaction.message.reply(reacted)
 
-    # Define the phrase you want to detect
-    target_phrase = "overwatch futa"
+@bot.slash_command(name="react_tuah", description="React on that thang")
+async def react_tuah(ctx, message: discord.Option(discord.Message, "Select a message to react to")):
+    try:
+        # Add the emoji reaction to the selected message
+        catch_phrase = react_text()
+        await ctx.respond(f"Reacted to {message}!")
+    except discord.HTTPException as e:
+        await ctx.respond(f"Failed to add reaction: {e}")
 
-    # Check if the target phrase is in the message content (case-insensitive)
-    if target_phrase.lower() in message.content.lower():
-        await message.reply("+ 10 Sean Bucks")
-    else:
-        await bot.process_commands(message)
-
+# @bot.event
+# async def on_message(message):
+#     # Ignore the bot's own messages
+#     if message.author == bot.user:
+#         return
+#
+#     # Define the phrase you want to detect
+#     target_phrase = "overwatch futa"
+#
+#     # Check if the target phrase is in the message content (case-insensitive)
+#     if target_phrase.lower() in message.content.lower():
+#         await message.reply("+ 10 Sean Bucks")
 
 bot.run(BOT_TOKEN)
