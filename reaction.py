@@ -1,5 +1,8 @@
 import os
 import random
+import csv
+import json
+import discord
 
 def grab_reaction():
     """Choose a random file from the given folder."""
@@ -24,3 +27,66 @@ def react_text():
     index = file.find(" ")
     file = file[index + 1: -4]
     return file.capitalize()
+
+def store_message(server, channel, name, message):
+    """Appends a new line to the specified CSV file."""
+    filename = "storage/text_history.csv"
+    # Open the CSV file in append mode
+    with open(filename, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        # Append the new row
+        writer.writerow([server, channel, name, message])
+
+
+def banned_list_file(filename):
+    try:
+        # Load data from the JSON file
+        with open(filename, 'r') as file:
+            data = json.load(file)
+
+        # Return all the values from the JSON data as a list
+        return list(data.values())
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f"Error: File not found or invalid JSON in {filename}")
+        return []
+
+
+def edit_banned_list(filename, channel_name, channel_id, add=True):
+    # Retrieve the data from the banned list
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
+
+    problem = False
+    if add:
+        data[channel_name] = channel_id
+        print(f"Added: {channel_name} to the banned list")
+
+    else:
+        if channel_name in data:
+            del data[channel_name]
+            print(f"Removed: {channel_name} from the banned list")
+        else:
+            print(f"{channel_name}: not found in the banned list.")
+            problem = True
+
+    # Save the updated data back to the file
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+    return problem
+
+def channelInfo(interaction, channel: discord.TextChannel = None, channel_ids: str = None):
+    if channel:
+        # If a channel is provided, grab the ID and add to the list
+        channel_name = channel.name
+        channel_id = channel.id
+    elif channel_ids:
+        channel_name = interaction.guild.get_channel(int(channel_ids))
+        channel_id = int(channel_ids)
+    else:
+        # If no channel is provided, inform the user
+        channel_name = interaction.channel.name
+        channel_id = interaction.channel.id
+    return channel_name, channel_id
