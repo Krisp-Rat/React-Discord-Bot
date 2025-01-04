@@ -1,4 +1,5 @@
 import discord
+from Tools.scripts.dutree import store
 from discord.ext import commands
 from discord import app_commands
 import dotenv
@@ -21,15 +22,16 @@ async def on_ready():
     await bot.tree.sync()
     print(f"{bot.user} is ready and online!")
 
-@bot.tree.command(name="saysomething", description="Say hello to the bot")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.user_install()
-async def hello(ctx: discord.interactions):
-    await ctx.response.send_message("Hello, world!")
+# @bot.tree.command(name="saysomething", description="Say hello to the bot")
+# @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+# @app_commands.user_install()
+# async def hello(ctx: discord.interactions):
+#     await ctx.response.send_message("Hello, world!")
 
 
 @bot.tree.command(name="join", description="Join a voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.user_install()
 async def join(ctx, vc: discord.VoiceChannel = None):
     # Check if the user is in a voice channel
     if not vc:
@@ -38,19 +40,24 @@ async def join(ctx, vc: discord.VoiceChannel = None):
         except Exception as e:
             await ctx.response.send_message("Must be in a VC or specify voice channel", ephemeral=True)
             return
-
-    voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     # Check if the bot is already connected to a voice channel
-    if voice_client:
-        await voice_client.disconnect(force=True)
-        await vc.connect()# Move bot to the new channel
-        await ctx.response.send_message(f"Moved to {vc.name}")
-    else:
-        await vc.connect()  # Connect the bot to the provided channel
-        await ctx.response.send_message(f"Connected to {vc.name}")
+    try:
+        voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+        if voice_client:
+            await voice_client.disconnect(force=True)
+            await vc.connect()# Move bot to the new channel
+            await ctx.response.send_message(f"Moved to {vc.name}", ephemeral=True)
+        else:
+            await vc.connect()  # Connect the bot to the provided channel
+            await ctx.response.send_message(f"Connected to {vc.name}", ephemeral=True)
+
+    except Exception as e:
+        await ctx.response.send_message(f"Could not join {vc.name}", ephemeral=True)
+        return
 
 @bot.tree.command(name="leave", description="Leave the voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.user_install()
 async def leave(ctx):
     # Check if the bot is in a voice channel
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
@@ -62,6 +69,7 @@ async def leave(ctx):
 
 @bot.tree.command(name="react", description="Play a reaction sound in the voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.user_install()
 async def react(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if not voice_client:
@@ -88,8 +96,7 @@ react_emoji = "react"
 
 # Creates the reactable emoji
 @bot.tree.command(name="create_react", description="Create a custom reaction emoji")
-@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.user_install()
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 async def create_react(ctx):
     if ctx.guild is None:
         await ctx.response.send_message("Can not perform that action here", ephemeral=True)
@@ -130,15 +137,22 @@ async def on_reaction_add(reaction, user):
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 @app_commands.user_install()
 async def react_tuah(ctx: discord.interactions, message: discord.Message):
+    # React to a message
     if message.channel.id in banned_channels :
         print("Banned attempt")
         await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
     else:
         try:
-            # Add the emoji reaction to the selected message
-            await ctx.response.send_message(react_text())
+            if ctx.guild and ctx.guild.name != "":
+                channel = "Server"
+                await message.reply(react_text())
+                await ctx.response.send_message("Thank you for your service", ephemeral=True)
+            else:
+                channel = "Server" if ctx.guild and ctx.guild.name == "" else "DM"
+                await ctx.response.send_message(react_text())
+            store_message("Message Command", channel, message.author.name, message.content, [])
         except discord.HTTPException as e:
-            await ctx.response.send_message(f"Failed to add reaction: {e}")
+            await ctx.response.send_message(f"Failed to add reaction: {e}", ephemeral=True)
 
 
 # Monitors text for banned words
