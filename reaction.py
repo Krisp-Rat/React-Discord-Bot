@@ -28,9 +28,7 @@ def react_text():
         if not lines:
             return "11 The file is empty.mp4"
         filename = random.choice(lines).strip()
-    index = filename.find(" ")
-    filename = filename[index + 1: -4]
-    return filename.capitalize()
+    return filename
 
 def store_message(server, channel, name, content, attachments):
     """Appends a new line to the specified CSV file."""
