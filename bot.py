@@ -12,7 +12,7 @@ FFMPEG_PATH = ffmpeg.get_ffmpeg_exe()
 dotenv.load_dotenv()
 BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
 
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=419636034037481472)
 
 ban_file = "storage/banned_channels.json"
 banned_channels = banned_list_file(ban_file)
@@ -22,24 +22,22 @@ async def on_ready():
     await bot.tree.sync()
     print(f"{bot.user} is ready and online!")
 
-# @bot.tree.command(name="saysomething", description="Say hello to the bot")
-# @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-# @app_commands.user_install()
-# async def hello(ctx: discord.interactions):
-#     await ctx.response.send_message("Hello, world!")
-
-
 @bot.tree.command(name="join", description="Join a voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-@app_commands.user_install()
-async def join(ctx, vc: discord.VoiceChannel = None):
+@app_commands.allowed_installs(guilds=True, users=True)
+async def join(ctx, vc: discord.VoiceChannel = None, vc_id: str = None):
     # Check if the user is in a voice channel
     if not vc:
         try:
-            vc = ctx.user.voice.channel
+            if vc_id:
+                vc_id = int(vc_id)
+                vc = await bot.fetch_channel(vc_id)
+            else:
+                vc = ctx.user.voice.channel
         except Exception as e:
             await ctx.response.send_message("Must be in a VC or specify voice channel", ephemeral=True)
             return
+
     # Check if the bot is already connected to a voice channel
     try:
         voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
@@ -57,7 +55,7 @@ async def join(ctx, vc: discord.VoiceChannel = None):
 
 @bot.tree.command(name="leave", description="Leave the voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-@app_commands.user_install()
+@app_commands.allowed_installs(guilds=True, users=True)
 async def leave(ctx):
     # Check if the bot is in a voice channel
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
@@ -69,7 +67,7 @@ async def leave(ctx):
 
 @bot.tree.command(name="react", description="Play a reaction sound in the voice channel")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-@app_commands.user_install()
+@app_commands.allowed_installs(guilds=True, users=True)
 async def react(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if not voice_client:
@@ -97,6 +95,7 @@ react_emoji = "react"
 # Creates the reactable emoji
 @bot.tree.command(name="create_react", description="Create a custom reaction emoji")
 @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
 async def create_react(ctx):
     if ctx.guild is None:
         await ctx.response.send_message("Can not perform that action here", ephemeral=True)
@@ -135,9 +134,10 @@ async def on_reaction_add(reaction, user):
 # Message command for reacting to a message
 @bot.tree.context_menu(name="react")
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
-@app_commands.user_install()
+@app_commands.allowed_installs(guilds=True, users=True)
 async def react_tuah(ctx: discord.interactions, message: discord.Message):
     # React to a message
+    # optional enable tts?
     if message.channel.id in banned_channels :
         print("Banned attempt")
         await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
@@ -175,40 +175,82 @@ async def on_message(message: discord.Message):
 
     await bot.process_commands(message)
 
-# # Add a channel to the banned list
-# @bot.tree.command(name="ban", description="Ban a channel", guild_ids=[507666860427313162])
-# @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-# async def ban_channel(interaction: discord.interactions, channel: discord.TextChannel = None, channel_id: str = None):
-#     global banned_channels
-#     channel_name, channel_id = await channelInfo(interaction, bot, channel, channel_id)
-#     exists = channel_id in banned_channels
-#     problem = edit_banned_list(ban_file, channel_name, channel_id)
-#
-#     if problem or exists:
-#         await interaction.response.send_message(f"Sorry, I can't ban: {channel_name}", ephemeral = True)
-#     else:
-#         banned_channels = banned_list_file(ban_file)
-#         await interaction.response.send_message(f"I have now been banished from: {channel_name}")
-#
-#
-# # Add a channel to the banned list
-# @bot.tree.command(name="unban", description="unban a channel",  guild_ids=[507666860427313162])
-# @app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
-# async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
-#     global banned_channels
-#     channel_name, channel_id = await channelInfo(ctx, bot, channel, channel_id)
-#     exists = channel_id in banned_channels
-#     problem = edit_banned_list(ban_file, channel_name, channel_id, False)
-#
-#     if problem or not exists:
-#         await ctx.response.send_message(f"Sorry, I can't unban: {channel_name}", ephemeral = True)
-#     else:
-#         banned_channels = banned_list_file(ban_file)
-#         await ctx.response.send_message(f"I have now been returned to: {channel_name}")
-#
-# async def role_command(ctx: discord.ApplicationContext):
+
+
+admin_access = [discord.Object(id=507666860427313162)]
+
+
+# Speak through the React bot
+@bot.tree.command(name="speak", description="Speak through me")
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+@app_commands.guilds(*admin_access)
+async def speak_through_me(ctx, channel_id: str, message_id: str, reply_content: str):
+    """Reply to a specific message given its channel ID and message ID."""
+    channel_id = int(channel_id)
+    message_id = int(message_id)
+    try:
+        # Fetch the channel
+        channel = await bot.fetch_channel(channel_id)
+        print("Got channel: ", channel.name)
+        if not isinstance(channel, (discord.TextChannel, discord.DMChannel)):
+            await ctx.response.send_message("Invalid channel type. Make sure it's a text or DM channel.", ephemeral = True)
+            return
+
+
+        # Fetch the message
+        message = await channel.fetch_message(message_id)
+        print("Got message: ", message.content)
+        # Reply to the message
+        await message.reply(reply_content)
+        await ctx.response.send_message(f"Replied to the message: {message.content}", ephemeral = True)
+    except discord.NotFound:
+        await ctx.response.send_message("Message or channel not found.", ephemeral = True)
+    except discord.Forbidden:
+        await ctx.response.send_message("I don't have permission to access that message or channel.", ephemeral = True)
+    except discord.HTTPException as e:
+        await ctx.response.send_message(f"An error occurred: {e}", ephemeral = True)
+
+
+
+# Add a channel to the banned list
+@bot.tree.command(name="ban", description="Ban a channel")
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.guilds(*admin_access)
+async def ban_channel(interaction: discord.interactions, channel: discord.TextChannel = None, channel_id: str = None):
+    global banned_channels
+    channel_name, channel_id = await channelInfo(interaction, bot, channel, channel_id)
+    exists = channel_id in banned_channels
+    problem = edit_banned_list(ban_file, channel_name, channel_id)
+
+    if problem or exists:
+        await interaction.response.send_message(f"Sorry, I can't ban: {channel_name}", ephemeral = True)
+    else:
+        banned_channels = banned_list_file(ban_file)
+        await interaction.response.send_message(f"I have now been banished from: {channel_name}")
+
+
+# Add a channel to the banned list
+@bot.tree.command(name="unban", description="unban a channel")
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.guilds(*admin_access)
+async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
+    global banned_channels
+    channel_name, channel_id = await channelInfo(ctx, bot, channel, channel_id)
+    exists = channel_id in banned_channels
+    problem = edit_banned_list(ban_file, channel_name, channel_id, False)
+
+    if problem or not exists:
+        await ctx.response.send_message(f"Sorry, I can't unban: {channel_name}", ephemeral = True)
+    else:
+        banned_channels = banned_list_file(ban_file)
+        await ctx.response.send_message(f"I have now been returned to: {channel_name}")
+
+# async def role_command(ctx: discord.interactions):
 #     emoji = "<:poop_deli:1324630414442365052>"
 #     await ctx.respond(f"Here is a custom emoji: {emoji}")
+
+
 
 
 bot.run(BOT_TOKEN)

@@ -23,10 +23,14 @@ def grab_reaction():
         return f"An error occurred: {e}"
 
 def react_text():
-    file = grab_reaction()
-    index = file.find(" ")
-    file = file[index + 1: -4]
-    return file.capitalize()
+    with open("Reactions/react_phrases.txt", "r") as file:
+        lines = file.readlines()
+        if not lines:
+            return "11 The file is empty.mp4"
+        filename = random.choice(lines).strip()
+    index = filename.find(" ")
+    filename = filename[index + 1: -4]
+    return filename.capitalize()
 
 def store_message(server, channel, name, content, attachments):
     """Appends a new line to the specified CSV file."""
@@ -91,3 +95,4 @@ async def channelInfo(interaction, bot, channel: discord.TextChannel = None, cha
         channel_name = interaction.channel.name
         channel_id = interaction.channel.id
     return channel_name, channel_id
+
