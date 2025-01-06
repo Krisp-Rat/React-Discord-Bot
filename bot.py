@@ -1,7 +1,7 @@
 import discord
 from Tools.scripts.dutree import store
 from discord.ext import commands
-from discord import app_commands
+from discord import app_commands, Object
 import dotenv
 import imageio_ffmpeg as ffmpeg
 
@@ -17,9 +17,15 @@ bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=4
 ban_file = "storage/banned_channels.json"
 banned_channels = banned_list_file(ban_file)
 
+admin_access = [discord.Object(id=507666860427313162)]
+
+
 @bot.event
 async def on_ready():
     await bot.tree.sync()
+    for server in admin_access:
+        await bot.tree.sync(guild=server)
+    # await bot.tree.sync(guild=discord.Object(id=629070806193799198)) # Ramen server sync
     print(f"{bot.user} is ready and online!")
 
 @bot.tree.command(name="join", description="Join a voice channel")
@@ -71,7 +77,7 @@ async def leave(ctx):
 async def react(ctx):
     voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
     if not voice_client:
-        await ctx.respond("I'm not connected to a voice channel! Use /join to connect me.", ephemeral=True)
+        await ctx.response.send_message("I'm not connected to a voice channel! Use /join to connect me.", ephemeral=True)
         return
 
     try:
@@ -159,7 +165,7 @@ async def react_tuah(ctx: discord.interactions, message: discord.Message):
 @bot.event
 async def on_message(message: discord.Message):
     # Store message if non-ephemeral
-
+    print(message.guild.id)
     if message.guild:
         store_message(message.guild.name, message.channel.name, message.author.name, message.content, message.attachments)
     # Ignore the bot's own messages
@@ -176,8 +182,6 @@ async def on_message(message: discord.Message):
     await bot.process_commands(message)
 
 
-
-admin_access = [discord.Object(id=507666860427313162)]
 
 
 # Speak through the React bot
@@ -215,7 +219,6 @@ async def speak_through_me(ctx, channel_id: str, message_id: str, reply_content:
 
 # Add a channel to the banned list
 @bot.tree.command(name="ban", description="Ban a channel")
-@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.guilds(*admin_access)
 async def ban_channel(interaction: discord.interactions, channel: discord.TextChannel = None, channel_id: str = None):
     global banned_channels
@@ -232,7 +235,6 @@ async def ban_channel(interaction: discord.interactions, channel: discord.TextCh
 
 # Add a channel to the banned list
 @bot.tree.command(name="unban", description="unban a channel")
-@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
 @app_commands.guilds(*admin_access)
 async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
     global banned_channels
@@ -246,9 +248,10 @@ async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: st
         banned_channels = banned_list_file(ban_file)
         await ctx.response.send_message(f"I have now been returned to: {channel_name}")
 
-# async def role_command(ctx: discord.interactions):
-#     emoji = "<:poop_deli:1324630414442365052>"
-#     await ctx.respond(f"Here is a custom emoji: {emoji}")
+@bot.tree.command(name="role_command_test", description="Admin only command")
+async def role_command(ctx: discord.interactions):
+    emoji = "<:poop_deli:1324630414442365052>"
+    await ctx.response.send_message(f"Here is pepsi dog: {emoji}", ephemeral = True)
 
 
 
