@@ -3,6 +3,11 @@ import random
 import csv
 import json
 import discord
+# from openai import OpenAI
+# import dotenv
+# dotenv.load_dotenv()
+# client = OpenAI()
+
 
 def grab_reaction():
     """Choose a random file from the given folder."""
@@ -30,9 +35,10 @@ def react_text():
         filename = random.choice(lines).strip()
     return filename
 
+
 def store_message(server, channel, name, content, attachments):
     """Appends a new line to the specified CSV file."""
-    filename = "storage/text_history.csv"
+    filename = "Storage/text_history.csv"
     # Open the CSV file in append mode
     url_list = [img.url for img in attachments]
     with open(filename, mode='a', newline='', encoding='utf-8') as file:
@@ -94,3 +100,12 @@ async def channelInfo(interaction, bot, channel: discord.TextChannel = None, cha
         channel_id = interaction.channel.id
     return channel_name, channel_id
 
+
+# completion = client.chat.completions.create(
+#     model="gpt-4o",
+#     store=True,
+#     messages=[
+#         {"role": "user", "content": "write a haiku about ai"}
+#     ]
+# )
+# print(completion)
