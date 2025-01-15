@@ -1,6 +1,7 @@
 import os
 import csv
-from datetime import datetime
+import bcrypt
+import uuid
 
 class Message_Command:
     def __init__(self, env, usr, auth, msg, rct):
@@ -36,24 +37,51 @@ def createMC():
     return ret
 
 
+def authenticate(token, xsrf=None):
+    # Set default values for a guest
+    usr = "Guest"
+    users = {}
+    token = token.encode()
+    for user in users:
+        # loop through authenticated users and check the hash of their passwd
+        auth_token = user.get("authenticationTOKEN", "")
+        auth = bcrypt.checkpw(token, auth_token)
+        if auth:
+            # Grab username from the authenticated user
+            usr = user.get("username")
+            print("\nauthorized: ", usr)
+            return auth, usr
 
-def clear_server(Server_name):
-    file_path = "../Storage/text_history.csv"
+    print("---Guest not authorized---")
+    return False, usr
 
-    # Create a temporary list to store filtered rows
-    filtered_rows = []
 
-    # Read the CSV file
-    with open(file_path, mode="r", newline="", encoding="utf-8") as file:
-        reader = csv.reader(file)
-        header = next(reader)  # Assuming the CSV has a header
-        filtered_rows.append(header)  # Add the header to the filtered list
 
-        for row in reader:
-            if row[0] != Server_name:  # Check if the value in the first column matches
-                filtered_rows.append(row)
+#
+# # Add a channel to the banned list
+# async def ban_channel(interaction: discord.interactions, channel: discord.TextChannel = None, channel_id: str = None):
+#     global banned_channels
+#     channel_name, channel_id = await channelInfo(interaction, bot, channel, channel_id)
+#     exists = channel_id in banned_channels
+#     problem = edit_banned_list(ban_file, channel_name, channel_id)
+#
+#     if problem or exists:
+#         await interaction.response.send_message(f"Sorry, I can't ban: {channel_name}", ephemeral = True)
+#     else:
+#         banned_channels = banned_list_file(ban_file)
+#         await interaction.response.send_message(f"I have now been banished from: {channel_name}")
+#
+#
+# # Add a channel to the banned list
+# async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
+#     global banned_channels
+#     channel_name, channel_id = await channelInfo(ctx, bot, channel, channel_id)
+#     exists = channel_id in banned_channels
+#     problem = edit_banned_list(ban_file, channel_name, channel_id, False)
+#
+#     if problem or not exists:
+#         await ctx.response.send_message(f"Sorry, I can't unban: {channel_name}", ephemeral = True)
+#     else:
+#         banned_channels = banned_list_file(ban_file)
+#         await ctx.response.send_message(f"I have now been returned to: {channel_name}")
 
-    # Write the filtered rows back to the CSV file
-    with open(file_path, mode="w", newline="", encoding="utf-8") as file:
-        writer = csv.writer(file)
-        writer.writerows(filtered_rows)

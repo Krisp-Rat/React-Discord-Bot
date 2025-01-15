@@ -3,6 +3,7 @@ import random
 import csv
 import json
 import discord
+from datetime import datetime
 # from openai import OpenAI
 # import dotenv
 # dotenv.load_dotenv()
@@ -31,9 +32,15 @@ def react_text():
     with open("Reactions/react_phrases.txt", "r") as file:
         lines = file.readlines()
         if not lines:
-            return "11 The file is empty.mp4"
-        filename = random.choice(lines).strip()
-    return filename
+            return "The file is empty"
+        react_phrase = random.choice(lines).strip()
+
+        # If this phrase is chosen then return the current time
+        if react_phrase == "Tell the current time":
+            if random.randint(0, 1) < .5:
+                time = datetime.now().strftime("%H:%M %p")
+                react_phrase = f"The current time is {time}"
+    return react_phrase
 
 
 def store_message(server, channel, name, content, attachments):
