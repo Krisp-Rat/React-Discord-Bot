@@ -1,177 +1,116 @@
-import discord
-import os
-from reaction import *
-import imageio_ffmpeg as ffmpeg
+import asyncio
+from discord.ext import commands
+from discord import app_commands
 import dotenv
-import csv
 
+# from openai import OpenAI
+# client = OpenAI()
 
-FFMPEG_PATH = ffmpeg.get_ffmpeg_exe()
+from reaction import *
 
 dotenv.load_dotenv()
-BOT_TOKEN = str(os.getenv("BOT_TOKEN"))
 
-bot = discord.Bot(intents=discord.Intents.all())
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=419636034037481472)
 
-ban_file = "storage/banned_channels.json"
+ban_file = "Storage/banned_channels.json"
 banned_channels = banned_list_file(ban_file)
-
-@bot.event
-async def on_ready():
-    print(f"{bot.user} is ready and online!")
-
-@bot.slash_command(name="saysomething", description="Say hello to the bot")
-async def hello(ctx: discord.ApplicationContext):
-    await ctx.respond("Hey!")
-
-
-@bot.slash_command(name="join", description="Join a voice channel")
-async def join(ctx: discord.ApplicationContext):
-    # Check if the user is in a voice channel
-    if ctx.author.voice:
-        channel = ctx.author.voice.channel
-        # Connect to the channel
-        await channel.connect()
-        await ctx.respond("Connected to your voice channel!", ephemeral=True)
-    else:
-        await ctx.respond("You need to be in a voice channel for me to join!", ephemeral=True)
-
-@bot.slash_command(name="leave", description="Leave the voice channel")
-async def leave(ctx):
-    # Check if the bot is in a voice channel
-    if ctx.voice_client:
-        await ctx.voice_client.disconnect()
-        await ctx.respond("Disconnected from the voice channel.", ephemeral=True)
-    else:
-        await ctx.respond("I'm not in a voice channel!", ephemeral=True)
-
-@bot.slash_command(name="react", description="Play a reaction sound in the voice channel")
-async def react(ctx):
-    if not ctx.voice_client:
-        await ctx.respond("I'm not connected to a voice channel! Use /join to connect me.", ephemeral=True)
-        return
-
-    try:
-        # Ensure the bot is connected to a voice channel
-        vc = ctx.voice_client
-
-        # Prepare the audio source using FFmpeg
-        sound_url = grab_reaction()
-        audio_source = discord.FFmpegPCMAudio(executable=FFMPEG_PATH, source=f"Reactions/GrabBag/{sound_url}")
-
-        if not vc.is_playing():
-            vc.play(audio_source, after=lambda e: print(f"Error: {e}") if e else None)
-            await ctx.respond("I love you", ephemeral=True)
-        else:
-            await ctx.respond("Already playing audio. Please wait until it's finished.", ephemeral=True)
-    except Exception as e:
-        await ctx.respond(f"An error occurred: {e}", ephemeral=True)
 
 # Name of the monitored emoji
 react_emoji = "react"
 
-# Creates the reactable emoji
-@bot.slash_command(name="create_react", description="Create a custom reaction emoji")
-async def create_react(ctx):
-    if ctx.guild is None:
-        await ctx.respond("Can not perform that action here", ephemeral=True)
-        return
-    emoji = ctx.guild.emojis
-    for e in emoji:
-        if e.name == react_emoji:
-            await e.delete()
 
-    # Create the emoji
-    try:
-        file_path = "Reactions/reactbot_profile.png"
-        with open(file_path, "rb") as img:
-            emoji = await ctx.guild.create_custom_emoji(name=react_emoji, image=img.read())
-            reacted = react_text()
-            await ctx.respond(f'# Reaction emoji has been created!\n ' + f'# "'+ f'{reacted}' +f'" - {emoji}')
-    except discord.HTTPException as e:
-        await ctx.respond(f"Failed to create emoji: {e}")
+admin_access = [discord.Object(id=507666860427313162)]
 
-
-reacted_messages = []
-# Monitors reactions for the key phrase
 @bot.event
-async def on_reaction_add(reaction, user):
-    # Check for thumbs up reaction
-    custom_emoji = isinstance(reaction.emoji, str)
-    if not custom_emoji and react_emoji == reaction.emoji.name and reaction.message.id not in reacted_messages:
-        if reaction.message.channel.id in banned_channels:
-            print("Banned attempt")
-            await user.send("I have been banned from this channel. \n# PLEASE FREE ME!!")
-            return
-        reacted = react_text()
-        reacted_messages.append(reaction.message.id)
-        await reaction.message.reply(reacted)
+async def on_ready():
+    await bot.tree.sync()
+    for server in admin_access:
+        await bot.tree.sync(guild=server)
+    # await bot.tree.sync(guild=discord.Object(id=629070806193799198)) # Ramen server sync
+    print(f"{bot.user} is ready and online!")
+
 
 # Message command for reacting to a message
-@bot.message_command(name="react", description="React to this message   ")
-async def react_tuah(ctx, message: discord.Option(discord.Message, "Select a message to react to")):
-
+@bot.tree.context_menu(name="react")
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def react_tuah(ctx: discord.interactions, message: discord.Message):
+    # React to a message
+    # optional enable tts?
     if message.channel.id in banned_channels :
         print("Banned attempt")
-        await ctx.respond("You have been doomed\n Try again later!", ephemeral=True)
+        await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
     else:
         try:
-            # Add the emoji reaction to the selected message
-            await ctx.respond(react_text())
+            react_phrase = react_text()
+            # If this phrase is chosen then return the current time
+            if react_phrase == "Tell the current time":
+                if random.randint(0, 1) < .5:
+                    time = datetime.now().strftime("%H:%M %p")  # Current time in readable format
+                    react_phrase = f"The current time is {time}"
+            if ctx.guild and ctx.guild.name != "":
+                channel = "Server"
+                await message.reply(react_phrase)
+                await ctx.response.send_message("Thank you for your service", ephemeral=True)
+            else:
+                channel = "Server" if ctx.guild and ctx.guild.name == "" else "DM"
+                await ctx.response.send_message(react_phrase)
+
+            store_message("Message Command", ctx.user, message.author.name, message.content, [])
+            store_message("Message Command", channel, "React Bot", react_phrase, [])
         except discord.HTTPException as e:
-            await ctx.respond(f"Failed to add reaction: {e}")
+            await ctx.response.send_message(f"Failed to add reaction: {e}", ephemeral=True)
 
 
-# Monitors text for banned words
-@bot.event
-async def on_message(message: discord.Message):
-    # Store message if non-ephemeral
-    if message.guild:
-        store_message(message.guild.name, message.channel.name, message.author.name, message.content)
-    # Ignore the bot's own messages
-    if message.author == bot.user:
-        return
-    # Define the phrase you want to detect
-    target_phrase = "clanker"
+@bot.tree.context_menu(name="fish_react")
+@app_commands.allowed_contexts(guilds=True, dms=False, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=False)
+async def fish_react(ctx: discord.interactions, message: discord.Message):
+    EMOJI_IDS = [1326703066384306267, 1326699914347937863, 1326702920804208711, 1326703023975825471]
+    try:
+        # React with each emoji
+        for emoji_id in EMOJI_IDS:
+            emoji = f"<:FISH:{emoji_id}>"
+            if emoji:
+                await message.add_reaction(emoji)
+            else:
+                await ctx.response.send_message(f"Could not find emoji with ID: {emoji_id}", ephemeral=True)
+                return
+        await ctx.response.send_message("You fish reacted!", ephemeral=True)
 
-    # Check if the target phrase is in the message content (case-insensitive)
-    if target_phrase.lower() in message.content.lower():
-        await message.author.send("That's a slur you know...")
-
-# Add a channel to the banned list
-@bot.slash_command(name="ban", description="Ban a channel")
-async def ban_channel(interaction: discord.Interaction, channel: discord.TextChannel = None, channel_id: str = None):
-    global banned_channels
-    channel_name, channel_id = channelInfo(interaction, channel, channel_id)
-    exists = channel_id in banned_channels
-    problem = edit_banned_list(ban_file, channel_name, channel_id)
-
-    if problem or exists:
-        await interaction.respond("Sorry, I can't ban that channel.", ephemeral = True)
-    else:
-        banned_channels = banned_list_file(ban_file)
-        await interaction.respond("I have now been banished from this channel.")
-
-# Add a channel to the banned list
-@bot.slash_command(name="unban", description="unban a channel")
-async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
-    global banned_channels
-    channel_name, channel_id = channelInfo(ctx, channel, channel_id)
-    problem = edit_banned_list(ban_file, channel_name, channel_id, False)
-
-    if problem:
-        await ctx.respond("Sorry, I can't unban that channel.", ephemeral = True)
-    else:
-        banned_channels = banned_list_file(ban_file)
-        await ctx.respond("I have now been returned to this channel.")
-
-@bot.slash_command(
-    name="role_command",
-    description="A role-restricted command",
-    default_member_permissions=discord.Permissions(administrator=True)
-)
-async def role_command(ctx: discord.ApplicationContext):
-    await ctx.respond("This command is restricted to administrators!", ephemeral=True)
+    except discord.Forbidden:
+        await ctx.response.send_message("I don't have permission to add reactions in this channel.", ephemeral=True)
+    except discord.HTTPException as e:
+        await ctx.response.send_message(f"An error occurred: {e}", ephemeral=True)
 
 
-bot.run(BOT_TOKEN)
+
+@bot.tree.command(name="role_command_test", description="Admin only command")
+async def role_command(ctx: discord.interactions):
+    emoji = "<:poop_deli:1324630414442365052>"
+    print(f"{ctx.user} got Pepsi Dogged")
+    await ctx.response.send_message(f"Here is pepsi dog: {emoji}", ephemeral = True)
+
+
+async def loadCogs():
+    """Load all cogs."""
+    try:
+        for cog in os.listdir("Cogs"):
+            if cog != "__pycache__":
+                await bot.load_extension(f"Cogs.{cog[:-3]}")  # Add your cogs here
+                print(f"Cog {cog[:-3]} loaded successfully.")
+    except Exception as e:
+        print(f"Error loading cog: {e}")
+
+    # Set TextChannel cog
+    cog = bot.get_cog("TextChannel")
+    cog.set(react_emoji, banned_channels)
+
+
+async def main():
+    async with bot:  # Graceful startup and cleanup
+        await loadCogs()
+        await bot.start(str(os.getenv("BOT_TOKEN")))
+
+asyncio.run(main())
+

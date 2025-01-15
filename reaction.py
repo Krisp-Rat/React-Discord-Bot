@@ -3,6 +3,12 @@ import random
 import csv
 import json
 import discord
+from datetime import datetime
+# from openai import OpenAI
+# import dotenv
+# dotenv.load_dotenv()
+# client = OpenAI()
+
 
 def grab_reaction():
     """Choose a random file from the given folder."""
@@ -23,19 +29,29 @@ def grab_reaction():
         return f"An error occurred: {e}"
 
 def react_text():
-    file = grab_reaction()
-    index = file.find(" ")
-    file = file[index + 1: -4]
-    return file.capitalize()
+    with open("Reactions/react_phrases.txt", "r") as file:
+        lines = file.readlines()
+        if not lines:
+            return "The file is empty"
+        react_phrase = random.choice(lines).strip()
 
-def store_message(server, channel, name, message):
+        # If this phrase is chosen then return the current time
+        if react_phrase == "Tell the current time":
+            if random.randint(0, 1) < .5:
+                time = datetime.now().strftime("%H:%M %p")
+                react_phrase = f"The current time is {time}"
+    return react_phrase
+
+
+def store_message(server, channel, name, content, attachments):
     """Appends a new line to the specified CSV file."""
-    filename = "storage/text_history.csv"
+    filename = "Storage/text_history.csv"
     # Open the CSV file in append mode
+    url_list = [img.url for img in attachments]
     with open(filename, mode='a', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         # Append the new row
-        writer.writerow([server, channel, name, message])
+        writer.writerow([server, channel, name, content] + url_list)
 
 
 def banned_list_file(filename):
@@ -63,7 +79,6 @@ def edit_banned_list(filename, channel_name, channel_id, add=True):
     if add:
         data[channel_name] = channel_id
         print(f"Added: {channel_name} to the banned list")
-
     else:
         if channel_name in data:
             del data[channel_name]
@@ -77,16 +92,27 @@ def edit_banned_list(filename, channel_name, channel_id, add=True):
         json.dump(data, file, indent=4)
     return problem
 
-def channelInfo(interaction, channel: discord.TextChannel = None, channel_ids: str = None):
+async def channelInfo(interaction, bot, channel: discord.TextChannel = None, channel_ids: str = None):
     if channel:
         # If a channel is provided, grab the ID and add to the list
         channel_name = channel.name
         channel_id = channel.id
     elif channel_ids:
-        channel_name = interaction.guild.get_channel(int(channel_ids))
+        channel_name = await bot.fetch_channel(int(channel_ids))
+        channel_name = channel_name.name
         channel_id = int(channel_ids)
     else:
         # If no channel is provided, inform the user
         channel_name = interaction.channel.name
         channel_id = interaction.channel.id
     return channel_name, channel_id
+
+
+# completion = client.chat.completions.create(
+#     model="gpt-4o",
+#     store=True,
+#     messages=[
+#         {"role": "user", "content": "write a haiku about ai"}
+#     ]
+# )
+# print(completion)
