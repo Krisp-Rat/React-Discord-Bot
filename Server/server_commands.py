@@ -1,7 +1,13 @@
 import os
 import csv
 import bcrypt
-import uuid
+import dotenv
+import requests
+import json
+from mpmath.libmp import to_int
+
+dotenv.load_dotenv()
+BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 class Message_Command:
     def __init__(self, env, usr, auth, msg, rct):
@@ -36,53 +42,84 @@ def createMC():
            prev = row
     return ret
 
+#-----------------------------------------------------------------------------
+# Authenticate functions
 
-
-def authenticate(token, xsrf=None):
+def authenticate(token):
     # Set default values for a guest
     usr = "Guest"
-    users = {}
     token = token.encode()
-    for user in users:
-        # loop through authenticated users and check the hash of their passwd
-        auth_token = user.get("authenticationTOKEN", "")
-        auth = bcrypt.checkpw(token, auth_token)
-        if auth:
-            # Grab username from the authenticated user
-            usr = user.get("username")
-            print("\nauthorized: ", usr)
-            return auth, usr
+    auth_token = os.environ.get("ADMIN_PASS", "").encode()
+    auth = bcrypt.checkpw(token, auth_token)
+    return auth, usr
 
-    print("---Guest not authorized---")
-    return False, usr
+def convert(token):
+    try:
+        return int(token).to_bytes(6, byteorder="big").decode("utf-8")
+    except ValueError:
+        return "None"
 
 
+#-----------------------------------------------------------------------------
+# Ban/Unban functions
 
-#
-# # Add a channel to the banned list
-# async def ban_channel(interaction: discord.interactions, channel: discord.TextChannel = None, channel_id: str = None):
-#     global banned_channels
-#     channel_name, channel_id = await channelInfo(interaction, bot, channel, channel_id)
-#     exists = channel_id in banned_channels
-#     problem = edit_banned_list(ban_file, channel_name, channel_id)
-#
-#     if problem or exists:
-#         await interaction.response.send_message(f"Sorry, I can't ban: {channel_name}", ephemeral = True)
-#     else:
-#         banned_channels = banned_list_file(ban_file)
-#         await interaction.response.send_message(f"I have now been banished from: {channel_name}")
-#
-#
-# # Add a channel to the banned list
-# async def unban_channel(ctx, channel: discord.TextChannel = None, channel_id: str = None):
-#     global banned_channels
-#     channel_name, channel_id = await channelInfo(ctx, bot, channel, channel_id)
-#     exists = channel_id in banned_channels
-#     problem = edit_banned_list(ban_file, channel_name, channel_id, False)
-#
-#     if problem or not exists:
-#         await ctx.response.send_message(f"Sorry, I can't unban: {channel_name}", ephemeral = True)
-#     else:
-#         banned_channels = banned_list_file(ban_file)
-#         await ctx.response.send_message(f"I have now been returned to: {channel_name}")
+def grabChannelName(channel_id):
+    # Construct the URL for the API endpoint
+    url = f'https://discord.com/api/v10/channels/{channel_id}'
 
+    # Set the headers to include the bot token for authorization
+    headers = {'Authorization': f'Bot {BOT_TOKEN}'}
+
+    # Send a GET request to fetch channel details
+    response = requests.get(url, headers=headers)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the response JSON
+        channel_data = response.json()
+
+        # Print the channel name
+        return True, channel_data['name']
+    else:
+        return False, "Error"
+
+def sendResponse(channel_id, ban):
+    # URL to send the message
+    url = f'https://discord.com/api/v10/channels/{channel_id}/messages'
+    # Headers to authenticate the request
+    headers = {
+        'Authorization': f'Bot {BOT_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+    # Payload for the message
+    message_content = "I have been banned from this channel :(" if ban else "We are **SO** back!!!"
+    payload = {'content': message_content}
+    requests.post(url, headers=headers, json=payload)
+
+
+def edit_banned_list(channel_name, channel_id, ban=True):
+    # Retrieve the data from the banned list
+    filename = f"../Storage/banned_channels.json"
+    try:
+        with open(filename, 'r') as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        data = {}
+
+    if ban:
+        data[channel_id] = channel_name
+        message = f"Added: {channel_name} to the banned list"
+        sendResponse(channel_id, ban)
+    else:
+        if channel_id in data:
+            del data[channel_id]
+            message = f"Removed: {channel_name} from the banned list"
+            sendResponse(channel_id, ban)
+        else:
+            message = f"{channel_name}: not found in the banned list."
+
+    # Save the updated data back to the file
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+
+    return message

@@ -67,52 +67,7 @@ def banned_list_file(filename):
         return []
 
 
-def edit_banned_list(filename, channel_name, channel_id, add=True):
-    # Retrieve the data from the banned list
-    try:
-        with open(filename, 'r') as file:
-            data = json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = {}
-
-    problem = False
-    if add:
-        data[channel_name] = channel_id
-        print(f"Added: {channel_name} to the banned list")
-    else:
-        if channel_name in data:
-            del data[channel_name]
-            print(f"Removed: {channel_name} from the banned list")
-        else:
-            print(f"{channel_name}: not found in the banned list.")
-            problem = True
-
-    # Save the updated data back to the file
-    with open(filename, 'w') as file:
-        json.dump(data, file, indent=4)
-    return problem
-
-async def channelInfo(interaction, bot, channel: discord.TextChannel = None, channel_ids: str = None):
-    if channel:
-        # If a channel is provided, grab the ID and add to the list
-        channel_name = channel.name
-        channel_id = channel.id
-    elif channel_ids:
-        channel_name = await bot.fetch_channel(int(channel_ids))
-        channel_name = channel_name.name
-        channel_id = int(channel_ids)
-    else:
-        # If no channel is provided, inform the user
-        channel_name = interaction.channel.name
-        channel_id = interaction.channel.id
-    return channel_name, channel_id
 
 
-# completion = client.chat.completions.create(
-#     model="gpt-4o",
-#     store=True,
-#     messages=[
-#         {"role": "user", "content": "write a haiku about ai"}
-#     ]
-# )
-# print(completion)
+
+

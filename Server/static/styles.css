@@ -6,7 +6,7 @@ body {
   justify-content: center;
   height: 100vh;
   margin: 0;
-  background: linear-gradient(135deg, #4c6ef5, #15aabf);
+  background: linear-gradient(135deg, rgba(26, 42, 108, 0.8), rgba(30, 60, 114, 0.6));
   color: white;
 }
 h1 {
