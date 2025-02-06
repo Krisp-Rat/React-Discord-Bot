@@ -38,7 +38,7 @@ async def on_ready():
 async def react_tuah(ctx: discord.interactions, message: discord.Message):
     # React to a message
     # optional enable tts?
-    if message.channel.id in banned_channels :
+    if str(message.channel.id) in banned_channels :
         print("Banned attempt")
         await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
     else:

@@ -61,7 +61,7 @@ def banned_list_file(filename):
             data = json.load(file)
 
         # Return all the values from the JSON data as a list
-        return list(data.values())
+        return list(data.keys())
     except (FileNotFoundError, json.JSONDecodeError):
         print(f"Error: File not found or invalid JSON in {filename}")
         return []

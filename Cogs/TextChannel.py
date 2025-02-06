@@ -53,7 +53,7 @@ class TextChannel(commands.Cog):
 
         # Check for the reaction criteria
         if not custom_emoji and reaction.emoji.name == self.react_emoji and reaction.message.id not in self.reacted_messages:
-            if reaction.message.channel.id in self.banned_channels:
+            if str(reaction.message.channel.id) in self.banned_channels:
                 print("Banned attempt")
                 try:
                     await user.send("I have been banned from this channel. \n# PLEASE FREE ME!!")
