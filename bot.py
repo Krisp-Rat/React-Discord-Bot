@@ -1,4 +1,6 @@
 import asyncio
+import os
+
 from discord.ext import commands
 from discord import app_commands
 import dotenv
@@ -12,11 +14,10 @@ dotenv.load_dotenv()
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=419636034037481472)
 
-ban_file = "Storage/banned_channels.json"
-banned_channels = banned_list_file(ban_file)
+banned_channels = banned_list_file(os.getenv("BAN_FILE"))
 
 # Name of the monitored emoji
-react_emoji = "react"
+react_emoji = os.getenv("REACT_EMOJI")
 
 
 admin_access = [discord.Object(id=507666860427313162)]
@@ -56,7 +57,7 @@ async def react_tuah(ctx: discord.interactions, message: discord.Message):
                 channel = "Server" if ctx.guild and ctx.guild.name == "" else "DM"
                 await ctx.response.send_message(react_phrase)
 
-            store_message("Message Command", ctx.user, message.author.name, message.content, [])
+            store_message("Message Command", ctx.user, message.author.name, message.content, message.attachments)
             store_message("Message Command", channel, "React Bot", react_phrase, [])
         except discord.HTTPException as e:
             await ctx.response.send_message(f"Failed to add reaction: {e}", ephemeral=True)

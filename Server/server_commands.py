@@ -37,6 +37,7 @@ def createMC():
     return ret
 
 
+
 def authenticate(token, xsrf=None):
     # Set default values for a guest
     usr = "Guest"
