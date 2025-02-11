@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Bot - Landing Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+   <link rel="icon" href="/react_icon">
+</head>
+
+<body>
+    {% if auth %}
+    <!-- Form for Ban/Unban -->
+    <form method="POST" action="/ban">
+        <label for="action">Select Action:</label>
+        <select id="action" name="action" required>
+            <option value="Ban">Ban</option>
+            <option value="Unban">Unban</option>
+        </select>
+        <br><br>
+        <label for="channel_id">Channel Id:</label>
+        <input type="text" id="channel_id" name="channel_id" placeholder="Channel Id #" required>
+        <br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+
+    {% endif %}
+
+    <script type="text/javascript">
+        // Flask message passed to the template
+        var message = "{{ message }}";
+        // Trigger the alert when the page loads
+        window.onload = function() {
+            if (message){
+                alert(message);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,10 +1,9 @@
 import asyncio
+import os
+import discord
 from discord.ext import commands
 from discord import app_commands
 import dotenv
-
-# from openai import OpenAI
-# client = OpenAI()
 
 from reaction import *
 
@@ -12,12 +11,7 @@ dotenv.load_dotenv()
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=419636034037481472)
 
-ban_file = "Storage/banned_channels.json"
-banned_channels = banned_list_file(ban_file)
-
-# Name of the monitored emoji
-react_emoji = "react"
-
+banned_channels = banned_list_file(os.getenv("BAN_FILE"))
 
 admin_access = [discord.Object(id=507666860427313162)]
 
@@ -36,27 +30,24 @@ async def on_ready():
 @app_commands.allowed_installs(guilds=True, users=True)
 async def react_tuah(ctx: discord.interactions, message: discord.Message):
     # React to a message
-    # optional enable tts?
-    if message.channel.id in banned_channels :
+    if str(message.channel.id) in banned_channels:
         print("Banned attempt")
         await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
     else:
         try:
-            react_phrase = react_text()
-            # If this phrase is chosen then return the current time
-            if react_phrase == "Tell the current time":
-                if random.randint(0, 1) < .5:
-                    time = datetime.now().strftime("%H:%M %p")  # Current time in readable format
-                    react_phrase = f"The current time is {time}"
+            img = message.attachments[0].url if message.attachments else None
             if ctx.guild and ctx.guild.name != "":
                 channel = "Server"
+                await ctx.response.send_message("Thank you for your service!", ephemeral=True)
+                react_phrase = react_text(message.content, img)
                 await message.reply(react_phrase)
-                await ctx.response.send_message("Thank you for your service", ephemeral=True)
             else:
+                await ctx.response.defer()
+                react_phrase = react_text(message.content, img)
                 channel = "Server" if ctx.guild and ctx.guild.name == "" else "DM"
-                await ctx.response.send_message(react_phrase)
+                await ctx.followup.send(react_phrase)
 
-            store_message("Message Command", ctx.user, message.author.name, message.content, [])
+            store_message("Message Command", ctx.user, message.author.name, message.content, message.attachments)
             store_message("Message Command", channel, "React Bot", react_phrase, [])
         except discord.HTTPException as e:
             await ctx.response.send_message(f"Failed to add reaction: {e}", ephemeral=True)
@@ -101,10 +92,6 @@ async def loadCogs():
                 print(f"Cog {cog[:-3]} loaded successfully.")
     except Exception as e:
         print(f"Error loading cog: {e}")
-
-    # Set TextChannel cog
-    cog = bot.get_cog("TextChannel")
-    cog.set(react_emoji, banned_channels)
 
 
 async def main():

@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Bot - Landing Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+   <link rel="icon" href="/react_icon">
 </head>
 <body>
-
+  <img src="/react_icon" alt="It's React Bot!"  style="max-width: 150px; max-height: 200px; margin-bottom: 1rem;" onclick="promptPassword()">
+  <h1>Welcome to React Bot</h1>
+  <p>He <strong>ALWAYS</strong> knows what's up</p>
+  <div class="button-container">
+    {% if auth %}
+      <button class="button" onclick="location.href='{{ url_for('admin') }}'">Access Admin Commands</button>
+    {% endif %}
+    <button class="button" onclick="location.href='{{ url_for('stats') }}'">View Statistics</button>
+  </div>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
