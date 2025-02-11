@@ -26,7 +26,7 @@ def grab_reaction():
     except Exception as e:
         return f"An error occurred: {e}"
 
-def react_text(text=""):
+def react_text(text="", img=None):
     with open("Reactions/react_phrases.txt", "r") as file:
         lines = file.readlines()
         if not lines:
@@ -40,7 +40,7 @@ def react_text(text=""):
 
         # Feed response to GPT model
         if random.random() < AI_RATE:
-            react_phrase = generate_reaction(react_phrase, text)
+            react_phrase = generate_reaction(react_phrase, text, img)
 
     return react_phrase
 
@@ -67,10 +67,4 @@ def banned_list_file(filename):
     except (FileNotFoundError, json.JSONDecodeError):
         print(f"Error: File not found or invalid JSON in {filename}")
         return []
-
-
-
-
-
-
 

@@ -1,7 +1,9 @@
+import os
+
 import discord
 from discord.ext import commands
 from discord import app_commands
-from reaction import react_text
+from reaction import react_text, banned_list_file
 
 
 class TextChannel(commands.Cog):
@@ -9,16 +11,9 @@ class TextChannel(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.react_emoji = ""
-        self.banned_channels = []
+        self.react_emoji = os.environ.get('REACT_EMOJI')
+        self.banned_channels = banned_list_file(os.getenv("BAN_FILE"))
         self.reacted_messages = []  # Keep track of reacted message IDs
-
-    # Update key global values
-    def set(self, emoji = None, banned_channels = None):
-        if emoji:
-            self.react_emoji = emoji
-        if banned_channels:
-            self.banned_channels = banned_channels
 
     # Creates the reactable emoji
     @app_commands.command(name="create_react", description="Create a custom reaction emoji")
@@ -61,6 +56,7 @@ class TextChannel(commands.Cog):
                 return
 
             # Respond to the reaction
+
             reacted_text = react_text(reaction.message.content)  # Call your custom function
             self.reacted_messages.append(reaction.message.id)  # Add to reacted list
             await reaction.message.reply(reacted_text)
