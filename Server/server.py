@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, make_response, request, flash, redirect, url_for, session, send_file
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import eventlet
@@ -37,14 +36,18 @@ def login():
 def admin():
     authenticationTOKEN = request.cookies.get("auth_token", "69")
     auth, usr = authenticate(convert(authenticationTOKEN))
-    msg = request.args.get('message', "")
 
-    return render_template("admin.html", auth=auth, message=msg)
 
-@app.route("/ban", methods=["POST"])
+    return render_template("admin.html", auth=auth)
+
+@app.route("/ban", endpoint="ban", methods=["GET","POST"])
 def edit_ban_list():
     authenticationTOKEN = request.cookies.get("auth_token", "69")
     auth, usr = authenticate(convert(authenticationTOKEN))
+    if request.method == "GET":
+        msg = request.args.get('message', "")
+        print(msg)
+        return render_template("ban.html", auth=auth, message=msg)
     channel_id = request.form.get("channel_id")
     valid, name = grabChannelName(channel_id)
     message = ""
@@ -52,10 +55,27 @@ def edit_ban_list():
         action = request.form.get('action') == "Ban"
         message = edit_banned_list(channel_name=name, channel_id=channel_id, ban=action)
 
-    return redirect(url_for("admin", message=message))
+    return redirect(url_for("ban", message=message))
 @app.route('/stats', endpoint="stats", methods=["GET", "POST"])
 def stats():
     return "<h1>Statistics Page</h1><p>View real-time statistics and analytics"
+
+
+@app.route('/add-phrase',endpoint= "add_phrase", methods=['GET', 'POST'])
+def add_phrase():
+    if request.method == 'POST':
+        phrase = request.form.get('phrase')
+        # Handle adding phrase logic here
+        return f"Phrase '{phrase}' has been added!"
+    return render_template('add_phrase.html')
+
+@app.route('/speak',endpoint="speak", methods=['GET', 'POST'])
+def send_message():
+    if request.method == 'POST':
+        message = request.form.get('message')
+        # Handle sending message logic here
+        return f"Message '{message}' has been sent!"
+    return render_template('send_message.html')
 
 @app.route("/react_icon", methods=["GET", "POST"])
 def react_icon():

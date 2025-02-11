@@ -83,7 +83,7 @@ def grabChannelName(channel_id):
     else:
         return False, "Error"
 
-def sendResponse(channel_id, ban):
+def sendResponse(channel_id, message_content):
     # URL to send the message
     url = f'https://discord.com/api/v10/channels/{channel_id}/messages'
     # Headers to authenticate the request
@@ -92,7 +92,6 @@ def sendResponse(channel_id, ban):
         'Content-Type': 'application/json'
     }
     # Payload for the message
-    message_content = "I have been banned from this channel :(" if ban else "We are **SO** back!!!"
     payload = {'content': message_content}
     requests.post(url, headers=headers, json=payload)
 
@@ -109,12 +108,12 @@ def edit_banned_list(channel_name, channel_id, ban=True):
     if ban:
         data[channel_id] = channel_name
         message = f"Added: {channel_name} to the banned list"
-        sendResponse(channel_id, ban)
+        sendResponse(channel_id, "I have been banned from this channel :(")
     else:
         if channel_id in data:
             del data[channel_id]
             message = f"Removed: {channel_name} from the banned list"
-            sendResponse(channel_id, ban)
+            sendResponse(channel_id, "We are **SO** back!!!")
         else:
             message = f"{channel_name}: not found in the banned list."
 

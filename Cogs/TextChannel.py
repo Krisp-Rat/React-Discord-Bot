@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-
-from reaction import react_text, store_message
+from reaction import react_text
 
 
 class TextChannel(commands.Cog):
@@ -62,7 +61,7 @@ class TextChannel(commands.Cog):
                 return
 
             # Respond to the reaction
-            reacted_text = react_text()  # Call your custom function
+            reacted_text = react_text(reaction.message.content)  # Call your custom function
             self.reacted_messages.append(reaction.message.id)  # Add to reacted list
             await reaction.message.reply(reacted_text)
 

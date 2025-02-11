@@ -1,12 +1,10 @@
 import asyncio
 import os
-
+import discord
 from discord.ext import commands
 from discord import app_commands
+from generated_reply import generate_reaction
 import dotenv
-
-# from openai import OpenAI
-# client = OpenAI()
 
 from reaction import *
 
@@ -43,12 +41,8 @@ async def react_tuah(ctx: discord.interactions, message: discord.Message):
         await ctx.response.send_message("You have been doomed\n Try again later!", ephemeral=True)
     else:
         try:
-            react_phrase = react_text()
-            # If this phrase is chosen then return the current time
-            if react_phrase == "Tell the current time":
-                if random.randint(0, 1) < .5:
-                    time = datetime.now().strftime("%H:%M %p")  # Current time in readable format
-                    react_phrase = f"The current time is {time}"
+            react_phrase = react_text(message.content)
+
             if ctx.guild and ctx.guild.name != "":
                 channel = "Server"
                 await message.reply(react_phrase)

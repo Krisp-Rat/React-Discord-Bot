@@ -4,38 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>React Bot - Landing Page</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='admin.css') }}">
    <link rel="icon" href="/react_icon">
 </head>
 
 <body>
-    {% if auth %}
-    <!-- Form for Ban/Unban -->
-    <form method="POST" action="/ban">
-        <label for="action">Select Action:</label>
-        <select id="action" name="action" required>
-            <option value="Ban">Ban</option>
-            <option value="Unban">Unban</option>
-        </select>
-        <br><br>
-        <label for="channel_id">Channel Id:</label>
-        <input type="text" id="channel_id" name="channel_id" placeholder="Channel Id #" required>
-        <br><br>
-
-        <button type="submit">Submit</button>
-    </form>
-
-    {% endif %}
-
-    <script type="text/javascript">
-        // Flask message passed to the template
-        var message = "{{ message }}";
-        // Trigger the alert when the page loads
-        window.onload = function() {
-            if (message){
-                alert(message);
-            }
-        };
-    </script>
+    <div class="container">
+        <h1>Admin Panel</h1>
+        <p>Select an action below:</p>
+        <ul class="options">
+            <li><a href="{{ url_for('ban') }}">Ban a User</a></li>
+            <li><a href="{{ url_for('add_phrase') }}">Add a New Phrase</a></li>
+            <li><a href="{{ url_for('speak') }}">Send a Message</a></li>
+        </ul>
+    </div>
 </body>
 </html>

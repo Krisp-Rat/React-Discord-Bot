@@ -2,13 +2,11 @@ import os
 import random
 import csv
 import json
-import discord
 from datetime import datetime
-# from openai import OpenAI
-# import dotenv
-# dotenv.load_dotenv()
-# client = OpenAI()
+from generated_reply import generate_reaction
 
+# Percentage of reactions that use AI
+AI_RATE = 1
 
 def grab_reaction():
     """Choose a random file from the given folder."""
@@ -28,7 +26,7 @@ def grab_reaction():
     except Exception as e:
         return f"An error occurred: {e}"
 
-def react_text():
+def react_text(text=""):
     with open("Reactions/react_phrases.txt", "r") as file:
         lines = file.readlines()
         if not lines:
@@ -37,9 +35,13 @@ def react_text():
 
         # If this phrase is chosen then return the current time
         if react_phrase == "Tell the current time":
-            if random.randint(0, 1) < .5:
-                time = datetime.now().strftime("%H:%M %p")
-                react_phrase = f"The current time is {time}"
+            time = datetime.now().strftime("%I:%M %p").lstrip('0')
+            react_phrase = f"The current time is {time}"
+
+        # Feed response to GPT model
+        if random.random() < AI_RATE:
+            react_phrase = generate_reaction(react_phrase, text)
+
     return react_phrase
 
 
@@ -65,6 +67,7 @@ def banned_list_file(filename):
     except (FileNotFoundError, json.JSONDecodeError):
         print(f"Error: File not found or invalid JSON in {filename}")
         return []
+
 
 
 
