@@ -1,0 +1,207 @@
+/* Reset default spacing */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Apply the gradient background to the body */
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: linear-gradient(135deg, rgba(26, 42, 108, 0.8), rgba(30, 60, 114, 0.6));
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Title Bar */
+.title-bar {
+  width: 90%;
+  max-width: 1200px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.title-bar h1 {
+  font-size: 2rem;
+}
+
+/* Container: larger in both width and height */
+.container {
+  display: flex;
+  width: 90%;
+  max-width: 1200px;
+  min-height: 80vh;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Sidebar styling with fixed width and flex layout */
+.sidebar {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Evenly space the tabs along the sidebar (desktop) */
+.tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  width: 100%;
+  list-style: none;
+}
+
+/* Each tab styling */
+.tab {
+  width: 100%;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background 0.3s;
+  text-align: center;
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tab.active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Main content area: fills the remaining space */
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Tab content styling */
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+
+.reactions-container {
+  margin: 20px auto;
+  margin-top: 0;
+  width: 100%;
+  max-width: 1200px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 65vh; /* Set maximum height to 60% of the viewport height */
+  word-wrap: break-word; /* Prevent long words from breaking the layout */
+}
+
+/* Individual reaction styling */
+.reaction {
+  background: rgba(0, 0, 0, 0.3);
+  margin: 10px 0;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+/* Styling each line to match the modern theme */
+.reaction-line {
+  margin: 5px 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(26, 42, 108, 0.8), rgba(30, 60, 114, 0.6));
+  border-radius: 10px 10px 0 0;
+  color: white;
+}
+
+.content-title {
+  font-size: 24px;
+  margin: 0;
+}
+
+#reset-filter {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
+  background: rgba(255, 69, 58, 0.9); /* A bold contrasting color */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+#reset-filter:hover {
+  background: rgba(255, 69, 58, 1);
+  transform: scale(1.05);
+}
+
+#reset-filter:active {
+  transform: scale(0.95);
+}
+
+/* Responsive Styles for mobile devices */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    width: 95%;
+    min-height: 90vh; /* Increased minimum height for mobile so main content fills most of the screen */
+    margin: 0 auto;
+    align-items: stretch;
+  }
+
+  /* Sidebar becomes full-width, acts as a top navigation bar */
+  .sidebar {
+    width: 100%;
+    padding: 10px;
+    flex: 0 0 auto; /* Sidebar height is defined by its content */
+  }
+
+  .tabs {
+    flex-direction: row;
+    justify-content: space-around;
+    height: auto;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 5px;
+    text-align: center;
+  }
+
+  /* Main content takes up remaining vertical space */
+  .main-content {
+    width: 100%;
+    padding: 15px;
+    flex: 1;
+  }
+
+  /* Adjust title bar for mobile */
+  .title-bar {
+    width: 95%;
+    margin-bottom: 15px;
+  }
+}

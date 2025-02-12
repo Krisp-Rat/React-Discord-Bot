@@ -80,6 +80,9 @@ async def fish_react(ctx: discord.interactions, message: discord.Message):
 async def role_command(ctx: discord.interactions):
     emoji = "<:poop_deli:1324630414442365052>"
     print(f"{ctx.user} got Pepsi Dogged")
+    with open("Storage/pepsi_dog.txt", mode='a', newline='', encoding='utf-8') as file:
+        # Append the new row
+        file.write(f"{ctx.user}\n")
     await ctx.response.send_message(f"Here is pepsi dog: {emoji}", ephemeral = True)
 
 

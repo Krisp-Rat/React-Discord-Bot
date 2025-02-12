@@ -1,46 +1,12 @@
 import os
-import csv
 import bcrypt
 import dotenv
 import requests
 import json
-from mpmath.libmp import to_int
 
 dotenv.load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
-class Message_Command:
-    def __init__(self, env, usr, auth, msg, rct):
-        self.env = env
-        self.usr = usr
-        self.auth = auth
-        self.msg = msg
-        self.rct = rct
-
-    def returnElement(self):
-        pass
-
-    def print(self):
-        print("\n--------------------")
-        print(f"{self.usr} reacted in a {self.env}")
-        print(f"{self.auth} said: {self.msg}")
-        print(f"React Bot: {self.rct}")
-
-
-#Create list of Message commands
-def createMC():
-    filename = "../Storage/text_history.csv"
-    # Read the CSV file
-    ret = []
-    with open(filename, mode="r", newline="", encoding="utf-8") as file:
-        reader = csv.reader(file)
-        prev = next(reader)  # Assuming the CSV has a header
-        for row in reader:
-           if row[1] == "Server" or row[1] == "DM":
-               MC = Message_Command(row[1], prev[1], prev[2], prev[3], row[3])
-               ret.append(MC)
-           prev = row
-    return ret
 
 #-----------------------------------------------------------------------------
 # Authenticate functions
@@ -122,3 +88,13 @@ def edit_banned_list(channel_name, channel_id, ban=True):
         json.dump(data, file, indent=4)
 
     return message
+
+#-----------------------------------------------------------------------------
+# Add phrase to Reactions/react_phrases.txt
+
+def add_phrase(phrase):
+    with open("../Reactions/react_phrases.txt", mode='a', encoding='utf-8') as file:
+        # Append the new row
+        file.write(f"\n{phrase}")
+
+#-----------------------------------------------------------------------------

@@ -3,7 +3,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 import eventlet
 import dotenv
 import json
-
+from statistics import createMC
 from server_commands import *
 app = Flask(__name__)
 dotenv.load_dotenv()
@@ -58,7 +58,8 @@ def edit_ban_list():
     return redirect(url_for("ban", message=message))
 @app.route('/stats', endpoint="stats", methods=["GET", "POST"])
 def stats():
-    return "<h1>Statistics Page</h1><p>View real-time statistics and analytics"
+    message_history = createMC()
+    return render_template("stats.html", reactions=message_history)
 
 
 @app.route('/add-phrase',endpoint= "add_phrase", methods=['GET', 'POST'])
@@ -74,6 +75,7 @@ def send_message():
     if request.method == 'POST':
         message = request.form.get('message')
         # Handle sending message logic here
+
         return f"Message '{message}' has been sent!"
     return render_template('send_message.html')
 

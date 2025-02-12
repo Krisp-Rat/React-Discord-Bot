@@ -10,3 +10,4 @@ Flask-SocketIO~=5.5.1
 asyncio~=3.4.3
 eventlet~=0.38.2
 bcrypt~=4.2.0
+requests~=2.32.3
