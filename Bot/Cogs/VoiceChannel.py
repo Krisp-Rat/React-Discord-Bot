@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from reaction import grab_reaction
 import imageio_ffmpeg as ffmpeg
+from reaction import grab_reaction
+
 
 class VoiceChannel(commands.Cog):
     """General bot commands."""
@@ -70,7 +71,7 @@ class VoiceChannel(commands.Cog):
 
             # Prepare the audio source using FFmpeg
             sound_url = grab_reaction()
-            audio_source = discord.FFmpegPCMAudio(executable=self.FFMPEG_PATH, source=f"Reactions/GrabBag/{sound_url}")
+            audio_source = discord.FFmpegPCMAudio(executable=self.FFMPEG_PATH, source=f"../Storage/Reactions/GrabBag/{sound_url}")
 
             if not voice_client.is_playing():
                 voice_client.play(audio_source, after=lambda e: print(f"Error: {e}") if e else None)

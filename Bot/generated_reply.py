@@ -1,7 +1,7 @@
 from openai import OpenAI
-import dotenv
+from dotenv import load_dotenv
 
-dotenv.load_dotenv()
+load_dotenv(dotenv_path='../Storage/.env')
 client = OpenAI()
 
 def generate_reaction(phrase, text, img=None):

@@ -1,5 +1,4 @@
 import asyncio
-import os
 import discord
 from discord.ext import commands
 from discord import app_commands
@@ -7,7 +6,7 @@ import dotenv
 
 from reaction import *
 
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path='../Storage/.env')
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), owner_id=419636034037481472)
 
@@ -20,7 +19,6 @@ async def on_ready():
     await bot.tree.sync()
     for server in admin_access:
         await bot.tree.sync(guild=server)
-    # await bot.tree.sync(guild=discord.Object(id=629070806193799198)) # Ramen server sync
     print(f"{bot.user} is ready and online!")
 
 
@@ -80,7 +78,7 @@ async def fish_react(ctx: discord.interactions, message: discord.Message):
 async def role_command(ctx: discord.interactions):
     emoji = "<:poop_deli:1324630414442365052>"
     print(f"{ctx.user} got Pepsi Dogged")
-    with open("Storage/pepsi_dog.txt", mode='a', newline='', encoding='utf-8') as file:
+    with open("../Storage/pepsi_dog.txt", mode='a', newline='', encoding='utf-8') as file:
         # Append the new row
         file.write(f"{ctx.user}\n")
     await ctx.response.send_message(f"Here is pepsi dog: {emoji}", ephemeral = True)
@@ -100,7 +98,7 @@ async def loadCogs():
 async def main():
     async with bot:  # Graceful startup and cleanup
         await loadCogs()
-        await bot.start(str(os.getenv("BOT_TOKEN")))
+        await bot.start(str(os.getenv("NOT_TOKEN")))
 
 asyncio.run(main())
 

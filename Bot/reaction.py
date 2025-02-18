@@ -2,17 +2,20 @@ import os
 import random
 import csv
 import json
+from dotenv import load_dotenv
 from datetime import datetime
 from generated_reply import generate_reaction
 
 # Percentage of reactions that use AI
-AI_RATE = 1
+load_dotenv(dotenv_path='../Storage/.env')
+AI_RATE = float(os.environ.get("AI_RATE"))
+
 
 def grab_reaction():
     """Choose a random file from the given folder."""
     try:
         # List all files in the folder
-        folder_path = "Reactions/GrabBag"
+        folder_path = "../Storage/Reactions/GrabBag"
         files = [file for file in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, file))]
 
         if not files:
@@ -27,7 +30,7 @@ def grab_reaction():
         return f"An error occurred: {e}"
 
 def react_text(text="", img=None):
-    with open("Reactions/react_phrases.txt", "r") as file:
+    with open("../Storage/Reactions/react_phrases.txt", "r") as file:
         lines = file.readlines()
         if not lines:
             return "The file is empty"
@@ -47,7 +50,7 @@ def react_text(text="", img=None):
 
 def store_message(server, channel, name, content, attachments):
     """Appends a new line to the specified CSV file."""
-    filename = "Storage/text_history.csv"
+    filename = "../Storage/text_history.csv"
     # Open the CSV file in append mode
     url_list = [img.url for img in attachments]
     with open(filename, mode='a', newline='', encoding='utf-8') as file:

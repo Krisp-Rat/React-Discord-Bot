@@ -1,12 +1,14 @@
-from flask import Flask, render_template, make_response, request, flash, redirect, url_for, session, send_file
+from flask import Flask, render_template, make_response, request, flash, redirect, url_for, session, send_file, \
+    send_from_directory
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import eventlet
-import dotenv
+from dotenv import load_dotenv
 import json
 from statistics import createMC
 from server_commands import *
+
+dotenv.load_dotenv(dotenv_path='../Storage/.env')
 app = Flask(__name__)
-dotenv.load_dotenv()
 app.secret_key = os.environ.get('SECRET_KEY')
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
@@ -79,11 +81,16 @@ def send_message():
         return f"Message '{message}' has been sent!"
     return render_template('send_message.html')
 
+
 @app.route("/react_icon", methods=["GET", "POST"])
 def react_icon():
-    file_path = "../Reactions/reactbot_profile.png"
-    return send_file(file_path)
+    file_path = "../Storage/reactbot_profile.png"
+    return send_file(file_path, mimetype='image/png')
 
 
+@app.route("/<path:filename>")
+def serve_static(filename):
+    static_dir = os.path.join(app.root_path, 'static')
+    return send_from_directory(static_dir, filename)
 
 socketio.run(app, host='0.0.0.0', port=8080, debug=True)

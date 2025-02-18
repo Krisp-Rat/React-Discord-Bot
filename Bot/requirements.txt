@@ -1,0 +1,7 @@
+ffmpeg~=1.4
+ffmpeg-python~=0.2.0
+PyNaCl
+imageio-ffmpeg~=0.5.1
+python-dotenv~=1.0.1
+discord.py~=2.4.0
+openai~=1.59.5

@@ -4,7 +4,7 @@ import dotenv
 import requests
 import json
 
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path='../Storage/.env')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 
@@ -93,7 +93,7 @@ def edit_banned_list(channel_name, channel_id, ban=True):
 # Add phrase to Reactions/react_phrases.txt
 
 def add_phrase(phrase):
-    with open("../Reactions/react_phrases.txt", mode='a', encoding='utf-8') as file:
+    with open("../Storage/Reactions/react_phrases.txt", mode='a', encoding='utf-8') as file:
         # Append the new row
         file.write(f"\n{phrase}")
 
